@@ -1,0 +1,89 @@
+# Find k-optimal with elbow method
+k_range = range(1,11)
+inertia = []
+
+for k in k_range:
+    kmean = KMeans(n_clusters=k , init='k-means++', random_state=12, n_init=10)
+    kmean.fit(data_reduced)  # Fit the model
+    inertia.append(kmean.inertia_)  # Get the cost function
+
+plt.plot(k_range, inertia)
+plt.title('OPTIMAL K VALUE')
+plt.xlabel('CLUSTER')
+plt.ylabel('WCSS')
+
+plt.show()
+
+# Check how good the cluster using silhouette coefficient
+k_range = range(2,11)
+sil_scores = []
+
+for k in k_range:
+    kmean = KMeans(n_clusters=k, random_state=12, init='k-means++', n_init=10)
+    kmean.fit(data_reduced)
+    label = kmean.labels_
+    sil_score = silhouette_score(X= data_reduced, labels=label, metric='euclidean')
+    sil_scores.append(sil_score)
+
+plt.plot(k_range, sil_scores)
+plt.title('Silhouette Coefficient')
+plt.xlabel('CLUSTER')
+plt.ylabel('Silhouette Score')
+
+plt.show()
+
+# Davies bouldin score
+k_range = range(2,11)
+davies_score = []
+
+for k in k_range:
+    kmean = KMeans(n_clusters=k, init='k-means++', random_state=12, n_init=10)
+    kmean.fit(X= data_reduced)
+    davies = davies_bouldin_score(X= data_reduced, labels=kmean.labels_)
+    davies_score.append(davies)
+
+plt.plot(k_range, davies_score)
+plt.title('Davies Bouldin Score')
+plt.xlabel('CLUSTER')
+plt.ylabel('Davies Score')
+
+plt.show()
+
+# K-MEANS
+fixed_kmean = KMeans(n_clusters=3, init='k-means++', random_state=12, n_init=1)
+fixed_kmean.fit(data_reduced)
+
+# Evaluation
+wcss = fixed_kmean.inertia_
+sil_coef = silhouette_score(X= data_reduced, labels=fixed_kmean.labels_)
+davies_bouldin = davies_bouldin_score(X= data_reduced, labels= fixed_kmean.labels_)
+
+print(f'WCSS Score : {wcss}')
+print(f'Silhouette Coefficient Score : {sil_coef}')
+print(f'Davies Bouldin Score : {davies_bouldin}')
+
+# Visualize K-means using 2d scatter plot
+centroids = fixed_kmean.cluster_centers_
+
+# Scatter plot
+plt.figure(figsize=(20,12))
+plt.scatter(x=data_reduced[:,0], y=data_reduced[:,1], c=fixed_kmean.labels_, cmap='viridis', s=250, alpha=0.7)
+plt.scatter(x=centroids[:,0], y=centroids[:,1], c='red', marker='X', label='Centroid', s=500)
+
+# Visualize 3d scatter plot using TSNE
+tsne = TSNE(n_components=3)
+tsne_data = tsne.fit_transform(data_reduced)
+
+fig = plt.figure(figsize=(14,7))
+ax = fig.add_subplot(1,1,1,projection='3d')
+
+scatter = plt.scatter(x = tsne_data[:,0], y= tsne_data[:,1], s= tsne_data[:,2], c=fixed_kmean.labels_)
+
+ax.set_title('CLUSTER')
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+
+fig.colorbar(scatter)
+
+plt.show()
